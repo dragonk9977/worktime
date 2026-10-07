@@ -20,6 +20,23 @@
         input[type="file"] { display: none; }
         .custom-file-upload { display: inline-block; padding: 12px 24px; cursor: pointer; background-color: #3498db; color: white; border-radius: 4px; font-weight: bold; font-size: 1.1em; transition: 0.2s; }
         .custom-file-upload:hover { background-color: #2980b9; }
+
+        /* 예외/조정 시간 설정 영역 CSS */
+        .exception-box { background-color: #fcfcfc; border: 1px solid #ddd; padding: 15px 20px; border-radius: 6px; margin-bottom: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .exception-box h4 { margin-top: 0; color: #2c3e50; display: flex; align-items: center; justify-content: space-between; }
+        .exception-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .exception-row input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .exception-row input[type="text"] { width: 120px; }
+        .exception-row input[type="date"] { width: 140px; }
+        .exception-row input[type="number"] { width: 120px; }
+        .exception-row input.reason { width: 200px; }
+        .btn-small { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-add { background-color: #2ecc71; color: white; }
+        .btn-add:hover { background-color: #27ae60; }
+        .btn-apply { background-color: #f39c12; color: white; }
+        .btn-apply:hover { background-color: #d35400; }
+        .btn-remove { background-color: #e74c3c; color: white; padding: 8px 12px; }
+        .btn-remove:hover { background-color: #c0392b; }
         
         /* 테이블 기본 스타일 */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -28,7 +45,6 @@
         tr:nth-child(even) { background-color: #f9f9f9; }
         tr:hover { background-color: #f1f1f1; }
         
-        /* 수정된 헤더 색상 (흰색 글씨 안 보임 해결) */
         th.col-gap { background-color: #e8f4f8; color: #2980b9 !important; border-bottom: 2px solid #2980b9;}
         th.col-ghost { background-color: #fdf5e6; color: #d35400 !important; border-bottom: 2px solid #d35400;}
         td.col-gap { background-color: #f4f9fb; }
@@ -43,54 +59,14 @@
         .highlight { font-weight: bold; color: #d35400; }
         .sub-text { font-size: 0.85em; color: #7f8c8d; }
 
-        /* 사람별 가로 스크롤 카드 레이아웃 */
-        .detail-scroll-container {
-            display: flex;
-            gap: 20px;
-            overflow-x: auto;
-            padding-bottom: 15px;
-            margin-top: 15px;
-        }
-        .worker-detail-card {
-            min-width: 340px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-        }
-        .worker-detail-card h4 {
-            background-color: #34495e;
-            color: white;
-            margin: 0;
-            padding: 12px;
-            text-align: center;
-            border-top-left-radius: 6px;
-            border-top-right-radius: 6px;
-            font-size: 1.1em;
-        }
-        .worker-table-wrap {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .worker-table-wrap table {
-            margin-top: 0;
-            border: none;
-            border-radius: 0;
-        }
-        .worker-table-wrap th {
-            font-size: 0.9em;
-            padding: 8px;
-            z-index: 1; /* 스크롤 시 헤더 고정용 */
-        }
-        .worker-table-wrap td {
-            font-size: 0.9em;
-            padding: 8px;
-        }
+        .detail-scroll-container { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 15px; margin-top: 15px; }
+        .worker-detail-card { min-width: 360px; background: #fff; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-shrink: 0; display: flex; flex-direction: column; }
+        .worker-detail-card h4 { background-color: #34495e; color: white; margin: 0; padding: 12px; text-align: center; border-top-left-radius: 6px; border-top-right-radius: 6px; font-size: 1.1em; }
+        .worker-table-wrap { max-height: 400px; overflow-y: auto; }
+        .worker-table-wrap table { margin-top: 0; border: none; border-radius: 0; }
+        .worker-table-wrap th { font-size: 0.9em; padding: 8px; z-index: 1; }
+        .worker-table-wrap td { font-size: 0.9em; padding: 8px; }
         
-        /* 웹킷(크롬/사파리) 스크롤바 디자인 */
         ::-webkit-scrollbar { width: 8px; height: 10px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 4px; }
@@ -111,6 +87,21 @@
             📁 파일 선택 (여러 개 가능)
         </label>
         <p style="margin-top: 15px; color: #7f8c8d; line-height: 1.5;">여러 명의 CSV 파일을 한 번에 <strong>드래그 앤 드롭</strong>으로 업로드할 수 있습니다.</p>
+    </div>
+
+    <!-- 예외/조정 시간 입력 영역 -->
+    <div class="exception-box">
+        <h4>
+            <span>⚙️ 예외/조정 시간 설정 (회의, 교육, 면담 등 합법적 이석 시간 차감)</span>
+            <div>
+                <button id="addExceptionBtn" class="btn-small btn-add">+ 대상 추가</button>
+                <button id="applyExceptionBtn" class="btn-small btn-apply">적용(계산 재실행)</button>
+            </div>
+        </h4>
+        <div id="exceptionList">
+            <!-- 추가되는 예외 항목들이 여기에 들어갑니다 -->
+        </div>
+        <p style="font-size: 0.85em; color: #7f8c8d; margin: 10px 0 0 0;">* 이름의 일부만 입력해도 됩니다 (예: '이종훈' 입력 시 LdapID가 포함된 작업자 자동 매칭). 사유는 참고용입니다.</p>
     </div>
 
     <div class="criteria-box" id="criteriaBox">
@@ -138,7 +129,6 @@
         </table>
 
         <h3>📑 일자별 상세 이석 내역</h3>
-        <!-- 사람별로 좌우 스크롤 되는 컨테이너 -->
         <div id="detailContainer" class="detail-scroll-container"></div>
     </div>
 </div>
@@ -154,6 +144,31 @@ const criteriaBox = document.getElementById('criteriaBox');
 const resultSection = document.getElementById('resultSection');
 const summaryBody = document.getElementById('summaryBody');
 const detailContainer = document.getElementById('detailContainer');
+const exceptionList = document.getElementById('exceptionList');
+
+// 예외 처리 행 추가 버튼
+document.getElementById('addExceptionBtn').addEventListener('click', () => {
+    const div = document.createElement('div');
+    div.className = 'exception-row';
+    div.innerHTML = `
+        <input type="text" placeholder="이름 (예: 이종훈)" class="exc-name">
+        <input type="date" class="exc-date">
+        <input type="number" placeholder="차감할 시간(분)" class="exc-min" min="0">
+        <input type="text" placeholder="사유 (예: 주간회의)" class="exc-reason reason">
+        <button class="btn-small btn-remove" onclick="this.parentElement.remove()">X</button>
+    `;
+    exceptionList.appendChild(div);
+});
+
+// 예외 적용 버튼
+document.getElementById('applyExceptionBtn').addEventListener('click', () => {
+    if (Object.keys(globalDataByWorkerAndDate).length > 0) {
+        const analysisData = analyze(globalDataByWorkerAndDate);
+        renderResults(analysisData);
+    } else {
+        alert("먼저 CSV 데이터를 업로드해주세요.");
+    }
+});
 
 // Drag & Drop
 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
@@ -173,6 +188,7 @@ resetBtn.addEventListener('click', () => {
     processedTaskIds.clear();
     summaryBody.innerHTML = '';
     detailContainer.innerHTML = '';
+    exceptionList.innerHTML = ''; // 조정 내역도 초기화
     resultSection.style.display = 'none';
     criteriaBox.style.display = 'none';
     alert("데이터가 모두 초기화되었습니다.");
@@ -263,6 +279,16 @@ function analyze(dataMap) {
     const details = [];
     const summaries = [];
 
+    // UI에서 예외/조정 데이터 가져오기
+    const exceptions = Array.from(exceptionList.querySelectorAll('.exception-row')).map(row => {
+        return {
+            name: row.querySelector('.exc-name').value.trim(),
+            date: row.querySelector('.exc-date').value,
+            deductSec: (parseInt(row.querySelector('.exc-min').value) || 0) * 60,
+            reason: row.querySelector('.exc-reason').value.trim()
+        };
+    }).filter(ex => ex.name && ex.date && ex.deductSec > 0);
+
     for (const worker in dataMap) {
         let totalDays = 0;
         let totalWorkerIdleSec = 0;
@@ -342,8 +368,31 @@ function analyze(dataMap) {
 
             let dailyTotalSec = dailyGapSec + dailyGhostSec;
             
+            // --- 예외 시간 조정 로직 ---
+            let adjustSec = 0;
+            let adjReason = "";
+            exceptions.forEach(ex => {
+                if (worker.includes(ex.name) && ex.date === dateStr) {
+                    adjustSec += ex.deductSec;
+                    if(ex.reason) adjReason += `[조정: ${ex.reason}] `;
+                }
+            });
+
+            if (adjustSec > 0 && dailyTotalSec > 0) {
+                let originalTotal = dailyTotalSec;
+                dailyTotalSec = Math.max(0, dailyTotalSec - adjustSec);
+                
+                // 차감된 비율만큼 Gap과 Ghost 시간을 비례 배분하여 축소
+                let ratio = dailyTotalSec / originalTotal;
+                dailyGapSec *= ratio;
+                dailyGhostSec *= ratio;
+            }
+
             if (dailyTotalSec > 0) {
-                details.push({ worker, date: dateStr, gapSec: dailyGapSec, ghostSec: dailyGhostSec, totalSec: dailyTotalSec });
+                details.push({ 
+                    worker, date: dateStr, gapSec: dailyGapSec, ghostSec: dailyGhostSec, 
+                    totalSec: dailyTotalSec, adjustmentNote: adjReason 
+                });
                 
                 totalDays++;
                 totalWorkerIdleSec += dailyTotalSec;
@@ -366,8 +415,6 @@ function analyze(dataMap) {
 
     summaries.sort((a, b) => a.avgSec - b.avgSec);
     if(summaries.length > 0) summaries[0].isBest = true; 
-    
-    // 상세 데이터는 날짜순으로 정렬
     details.sort((a, b) => a.date.localeCompare(b.date));
     
     return { summaries, details };
@@ -412,16 +459,12 @@ function renderResults(data) {
             summaryBody.appendChild(tr);
         });
 
-        // ----------------------------------------------------
-        // 상세 내역: 사람별 세로 레이아웃 구성 (가로 스와이프)
-        // ----------------------------------------------------
         const detailsByWorker = {};
         data.details.forEach(d => {
             if(!detailsByWorker[d.worker]) detailsByWorker[d.worker] = [];
             detailsByWorker[d.worker].push(d);
         });
 
-        // 요약 테이블 순서와 동일하게 렌더링
         const sortedWorkers = Object.keys(detailsByWorker).sort((a, b) => a.localeCompare(b));
         
         sortedWorkers.forEach(worker => {
@@ -431,14 +474,17 @@ function renderResults(data) {
             
             let tbodyHTML = '';
             detailsByWorker[worker].forEach(d => {
-                // 연도(2026-)를 빼서 날짜 칸을 간결하게 (MM-DD)
                 const shortDate = d.date.slice(5).replace('-', '/');
+                // 조정 사유가 있으면 강조
+                const highlightStyle = d.adjustmentNote ? "background-color: #fffae6;" : "";
+                const noteHTML = d.adjustmentNote ? `<div style="font-size:0.75em; color:#d35400; margin-top:2px;">${d.adjustmentNote}</div>` : "";
+                
                 tbodyHTML += `
-                    <tr>
+                    <tr style="${highlightStyle}">
                         <td>${shortDate}</td>
                         <td class="col-gap" style="color:#2980b9;">${formatTime(d.gapSec)}</td>
                         <td class="col-ghost" style="color:#d35400;">${formatTime(d.ghostSec)}</td>
-                        <td><strong>${formatTime(d.totalSec)}</strong></td>
+                        <td><strong>${formatTime(d.totalSec)}</strong>${noteHTML}</td>
                     </tr>
                 `;
             });
