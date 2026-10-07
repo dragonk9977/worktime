@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>근무 시간 분석기</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h2 { margin: 0; color: #2c3e50; }
+        h3 { color: #34495e; margin-top: 40px; border-bottom: 2px solid #3498db; padding-bottom: 8px; display: inline-block;}
+        
+        .reset-btn { background-color: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .reset-btn:hover { background-color: #c0392b; }
+        
+        .upload-area { border: 2px dashed #3498db; padding: 40px 20px; text-align: center; border-radius: 6px; background-color: #ecf0f1; margin-bottom: 20px; transition: 0.3s; }
+        .upload-area.dragover { background-color: #d1d8e0; border-color: #2980b9; }
+        
+        input[type="file"] { display: none; }
+        .custom-file-upload { display: inline-block; padding: 12px 24px; cursor: pointer; background-color: #3498db; color: white; border-radius: 4px; font-weight: bold; font-size: 1.1em; transition: 0.2s; }
+        .custom-file-upload:hover { background-color: #2980b9; }
+        
+        /* 테이블 기본 스타일 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 0.95em; }
+        th { background-color: #34495e; color: white; position: sticky; top: 0; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        /* 수정된 헤더 색상 (흰색 글씨 안 보임 해결) */
+        th.col-gap { background-color: #e8f4f8; color: #2980b9 !important; border-bottom: 2px solid #2980b9;}
+        th.col-ghost { background-color: #fdf5e6; color: #d35400 !important; border-bottom: 2px solid #d35400;}
+        td.col-gap { background-color: #f4f9fb; }
+        td.col-ghost { background-color: #fefaf4; }
+        
+        .criteria-box { background-color: #f8f9fa; border-left: 4px solid #f39c12; padding: 15px; margin-top: 20px; border-radius: 4px; display: none; }
+        .criteria-box ul { margin: 5px 0 0 0; padding-left: 20px; line-height: 1.6; color: #555;}
+        
+        #resultSection { display: none; }
+        .emoji { font-size: 1.2em; margin-right: 5px; }
+        .text-left { text-align: left !important; line-height: 1.5; }
+        .highlight { font-weight: bold; color: #d35400; }
+        .sub-text { font-size: 0.85em; color: #7f8c8d; }
+
+        /* 사람별 가로 스크롤 카드 레이아웃 */
+        .detail-scroll-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            margin-top: 15px;
+        }
+        .worker-detail-card {
+            min-width: 340px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .worker-detail-card h4 {
+            background-color: #34495e;
+            color: white;
+            margin: 0;
+            padding: 12px;
+            text-align: center;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            font-size: 1.1em;
+        }
+        .worker-table-wrap {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .worker-table-wrap table {
+            margin-top: 0;
+            border: none;
+            border-radius: 0;
+        }
+        .worker-table-wrap th {
+            font-size: 0.9em;
+            padding: 8px;
+            z-index: 1; /* 스크롤 시 헤더 고정용 */
+        }
+        .worker-table-wrap td {
+            font-size: 0.9em;
+            padding: 8px;
+        }
+        
+        /* 웹킷(크롬/사파리) 스크롤바 디자인 */
+        ::-webkit-scrollbar { width: 8px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #95a5a6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-area">
+        <h2>⏱️ 근무 시간 분석기</h2>
+        <button id="resetBtn" class="reset-btn">🔄 전체 초기화</button>
+    </div>
+    
+    <div class="upload-area" id="dropZone">
+        <label class="custom-file-upload">
+            <input type="file" id="csvFileInput" accept=".csv" multiple />
+            📁 파일 선택 (여러 개 가능)
+        </label>
+        <p style="margin-top: 15px; color: #7f8c8d; line-height: 1.5;">여러 명의 CSV 파일을 한 번에 <strong>드래그 앤 드롭</strong>으로 업로드할 수 있습니다.</p>
+    </div>
+
+    <div class="criteria-box" id="criteriaBox">
+        <strong>📌 이석 시간 분석 기준 (점심시간 12:00~13:00 및 출퇴근 전후 공백은 모두 제외)</strong>
+        <ul>
+            <li><strong style="color:#2980b9;">순수 대기 (Gap):</strong> 이전 작업 완료 후 다음 작업 시작 전까지 아무것도 하지 않은 틈이 15분을 초과한 경우</li>
+            <li><strong style="color:#d35400;">작업 방치 (Ghost):</strong> 단일 작업 창을 켜둔 채 15분 이상 소요된 경우 (실제 작업이 아닌 방치로 간주)</li>
+        </ul>
+    </div>
+
+    <div id="resultSection">
+        <h3>📊 작업자별 주요 특징 및 요약 분석</h3>
+        <table id="summaryTable">
+            <thead>
+                <tr>
+                    <th width="8%">작업자</th>
+                    <th width="7%">분석 일수</th>
+                    <th width="12%" class="col-gap">일평균<br>순수 대기 (간격)</th>
+                    <th width="12%" class="col-ghost">일평균<br>작업 방치 (장기)</th>
+                    <th width="12%">일평균<br>총 이석 시간</th>
+                    <th width="49%">이석 발생 주요 원인 (유형 분석)</th>
+                </tr>
+            </thead>
+            <tbody id="summaryBody"></tbody>
+        </table>
+
+        <h3>📑 일자별 상세 이석 내역</h3>
+        <!-- 사람별로 좌우 스크롤 되는 컨테이너 -->
+        <div id="detailContainer" class="detail-scroll-container"></div>
+    </div>
+</div>
+
+<script>
+let globalDataByWorkerAndDate = {};
+let processedTaskIds = new Set();
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('csvFileInput');
+const resetBtn = document.getElementById('resetBtn');
+const criteriaBox = document.getElementById('criteriaBox');
+const resultSection = document.getElementById('resultSection');
+const summaryBody = document.getElementById('summaryBody');
+const detailContainer = document.getElementById('detailContainer');
+
+// Drag & Drop
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) handleFiles(e.target.files);
+    fileInput.value = '';
+});
+
+// Reset
+resetBtn.addEventListener('click', () => {
+    globalDataByWorkerAndDate = {};
+    processedTaskIds.clear();
+    summaryBody.innerHTML = '';
+    detailContainer.innerHTML = '';
+    resultSection.style.display = 'none';
+    criteriaBox.style.display = 'none';
+    alert("데이터가 모두 초기화되었습니다.");
+});
+
+async function handleFiles(files) {
+    const promises = Array.from(files).map(file => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                if (text.indexOf('') !== -1) { 
+                    const readerUtf8 = new FileReader();
+                    readerUtf8.onload = (e2) => { parseCSVData(e2.target.result); resolve(); };
+                    readerUtf8.readAsText(file, 'utf-8');
+                } else {
+                    parseCSVData(text); resolve();
+                }
+            };
+            reader.readAsText(file, 'euc-kr');
+        });
+    });
+
+    await Promise.all(promises);
+    const analysisData = analyze(globalDataByWorkerAndDate);
+    renderResults(analysisData);
+}
+
+function parseCSVData(csvText) {
+    const lines = csvText.trim().split('\n');
+    if (lines.length < 2) return;
+
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const workerIdx = headers.indexOf('작업자 (LdapID)');
+    let startIdx = headers.indexOf('시작일시');
+    let endIdx = headers.indexOf('완료일시');
+    const taskIdIdx = headers.indexOf('작업ID');
+
+    const startDateIdx = headers.indexOf('시작날짜');
+    const startTimeIdx = headers.indexOf('시작시간');
+    const endDateIdx = headers.indexOf('완료날짜');
+    const endTimeIdx = headers.indexOf('완료시간');
+
+    if (workerIdx === -1) return;
+
+    for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const row = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        const worker = row[workerIdx];
+        const taskId = taskIdIdx !== -1 ? row[taskIdIdx] : null;
+
+        if (taskId && processedTaskIds.has(taskId)) continue;
+        if (taskId) processedTaskIds.add(taskId);
+
+        let startDt, endDt;
+
+        if (startDateIdx !== -1 && startTimeIdx !== -1) {
+            startDt = new Date(row[startDateIdx] + 'T' + row[startTimeIdx]);
+            endDt = new Date(row[endDateIdx] + 'T' + row[endTimeIdx]);
+        } else if (startIdx !== -1 && endIdx !== -1) {
+            startDt = parseDateStr(row[startIdx]);
+            endDt = parseDateStr(row[endIdx]);
+        }
+
+        if (!startDt || !endDt || isNaN(startDt.getTime()) || isNaN(endDt.getTime())) continue;
+
+        const dateStr = startDt.toISOString().split('T')[0];
+        
+        if (!globalDataByWorkerAndDate[worker]) globalDataByWorkerAndDate[worker] = {};
+        if (!globalDataByWorkerAndDate[worker][dateStr]) globalDataByWorkerAndDate[worker][dateStr] = [];
+        
+        globalDataByWorkerAndDate[worker][dateStr].push({ start: startDt, end: endDt });
+    }
+}
+
+function parseDateStr(str) {
+    if(!str || str.length < 14) return null;
+    const y = parseInt(str.substring(0,4));
+    const m = parseInt(str.substring(4,6)) - 1;
+    const d = parseInt(str.substring(6,8));
+    const h = parseInt(str.substring(8,10));
+    const min = parseInt(str.substring(10,12));
+    const sec = parseInt(str.substring(12,14));
+    return new Date(y, m, d, h, min, sec);
+}
+
+function analyze(dataMap) {
+    const details = [];
+    const summaries = [];
+
+    for (const worker in dataMap) {
+        let totalDays = 0;
+        let totalWorkerIdleSec = 0;
+        let totalWorkerGhostSec = 0;
+        let totalWorkerGapSec = 0;
+
+        for (const dateStr in dataMap[worker]) {
+            const tasks = dataMap[worker][dateStr];
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const workStart = new Date(y, m-1, d, 8, 30, 0);
+            const workEnd = new Date(y, m-1, d, 17, 30, 0);
+            const lunchStart = new Date(y, m-1, d, 12, 0, 0);
+            const lunchEnd = new Date(y, m-1, d, 13, 0, 0);
+
+            let validIntervals = [];
+            let dailyGhostSec = 0;
+
+            tasks.forEach(t => {
+                let s = new Date(Math.max(t.start, workStart));
+                let e = new Date(Math.min(t.end, workEnd));
+                if (s >= e) return;
+
+                let durSec = (e - s) / 1000;
+                if (s < lunchEnd && e > lunchStart) {
+                    let os = new Date(Math.max(s, lunchStart));
+                    let oe = new Date(Math.min(e, lunchEnd));
+                    durSec -= Math.max(0, (oe - os) / 1000);
+                }
+
+                if (durSec <= 900) {
+                    validIntervals.push({ s, e });
+                } else {
+                    dailyGhostSec += durSec;
+                }
+            });
+
+            if (validIntervals.length === 0 && dailyGhostSec === 0) continue;
+
+            let dailyGapSec = 0;
+
+            if (validIntervals.length > 0) {
+                validIntervals.sort((a, b) => a.s - b.s);
+                let merged = [validIntervals[0]];
+
+                for (let i = 1; i < validIntervals.length; i++) {
+                    let last = merged[merged.length - 1];
+                    let curr = validIntervals[i];
+                    if (curr.s <= last.e) {
+                        last.e = new Date(Math.max(last.e, curr.e));
+                    } else {
+                        merged.push(curr);
+                    }
+                }
+
+                let boundStart = new Date(Math.max(workStart, merged[0].s));
+                let boundEnd = new Date(Math.min(workEnd, merged[merged.length - 1].e));
+                
+                let idleGaps = [];
+                let current = boundStart;
+
+                merged.forEach(interval => {
+                    if (interval.s > current) idleGaps.push({ s: current, e: interval.s });
+                    current = new Date(Math.max(current, interval.e));
+                });
+                if (current < boundEnd) idleGaps.push({ s: current, e: boundEnd });
+
+                idleGaps.forEach(gap => {
+                    let durSec = (gap.e - gap.s) / 1000;
+                    if (gap.s < lunchEnd && gap.e > lunchStart) {
+                        let os = new Date(Math.max(gap.s, lunchStart));
+                        let oe = new Date(Math.min(gap.e, lunchEnd));
+                        durSec -= Math.max(0, (oe - os) / 1000);
+                    }
+                    if (durSec > 900) dailyGapSec += durSec;
+                });
+            }
+
+            let dailyTotalSec = dailyGapSec + dailyGhostSec;
+            
+            if (dailyTotalSec > 0) {
+                details.push({ worker, date: dateStr, gapSec: dailyGapSec, ghostSec: dailyGhostSec, totalSec: dailyTotalSec });
+                
+                totalDays++;
+                totalWorkerIdleSec += dailyTotalSec;
+                totalWorkerGhostSec += dailyGhostSec;
+                totalWorkerGapSec += dailyGapSec;
+            }
+        }
+
+        if (totalDays > 0) {
+            summaries.push({
+                worker,
+                totalDays,
+                avgSec: totalWorkerIdleSec / totalDays,
+                avgGapSec: totalWorkerGapSec / totalDays,
+                avgGhostSec: totalWorkerGhostSec / totalDays,
+                ghostRatio: totalWorkerGhostSec / (totalWorkerGhostSec + totalWorkerGapSec)
+            });
+        }
+    }
+
+    summaries.sort((a, b) => a.avgSec - b.avgSec);
+    if(summaries.length > 0) summaries[0].isBest = true; 
+    
+    // 상세 데이터는 날짜순으로 정렬
+    details.sort((a, b) => a.date.localeCompare(b.date));
+    
+    return { summaries, details };
+}
+
+function getPersona(summary) {
+    const ratio = Math.round(summary.ghostRatio * 100);
+    const gapRatio = 100 - ratio;
+    
+    if (summary.isBest && summary.avgSec < 3600) { 
+        return `<span class="emoji">🎯</span><span class="highlight">최고 효율형:</span> 전체 평균 이석 시간이 가장 적습니다. 단, 이석이 발생할 경우 방치(${ratio}%) 비중이 틈새 대기(${gapRatio}%)보다 높게 나타납니다.`;
+    } else if (ratio >= 60) {
+        return `<span class="emoji">👻</span><span class="highlight">방치형:</span> 작업과 작업 사이의 공백보다 <strong>단일 작업을 장시간 켜두고 방치하는 비중(${ratio}%)</strong>이 훨씬 높습니다.`;
+    } else if (ratio <= 40) {
+        return `<span class="emoji">⏳</span><span class="highlight">순수 대기형:</span> 작업을 방치하기보다 <strong>작업과 다음 작업 사이의 순수 공백 시간(${gapRatio}%)</strong>이 길게 나타납니다.`;
+    } else {
+        return `<span class="emoji">⚖️</span><span class="highlight">복합형:</span> 작업 간 대기 시간과 창을 방치하는 시간이 절반씩 균형 있게 발생하고 있습니다. (방치 ${ratio}%)`;
+    }
+}
+
+function renderResults(data) {
+    summaryBody.innerHTML = '';
+    detailContainer.innerHTML = '';
+    
+    if (data.summaries.length === 0) {
+        summaryBody.innerHTML = '<tr><td colspan="6">분석된 데이터가 없습니다.</td></tr>';
+        detailContainer.innerHTML = '<p style="padding:20px; color:#7f8c8d;">분석된 상세 데이터가 없습니다.</p>';
+    } else {
+        data.summaries.sort((a, b) => a.worker.localeCompare(b.worker));
+        
+        data.summaries.forEach(s => {
+            const tr = document.createElement('tr');
+            const wName = s.worker.split(' (')[0];
+            tr.innerHTML = `
+                <td><strong>${wName}</strong></td>
+                <td>${s.totalDays}일</td>
+                <td class="col-gap" style="color:#2980b9;"><strong>${formatTime(s.avgGapSec)}</strong> <br><span class="sub-text">(${Math.round(s.avgGapSec/60)}분)</span></td>
+                <td class="col-ghost" style="color:#d35400;"><strong>${formatTime(s.avgGhostSec)}</strong> <br><span class="sub-text">(${Math.round(s.avgGhostSec/60)}분)</span></td>
+                <td><strong>${formatTime(s.avgSec)}</strong> <br><span class="sub-text">(${Math.round(s.avgSec/60)}분)</span></td>
+                <td class="text-left">${getPersona(s)}</td>
+            `;
+            summaryBody.appendChild(tr);
+        });
+
+        // ----------------------------------------------------
+        // 상세 내역: 사람별 세로 레이아웃 구성 (가로 스와이프)
+        // ----------------------------------------------------
+        const detailsByWorker = {};
+        data.details.forEach(d => {
+            if(!detailsByWorker[d.worker]) detailsByWorker[d.worker] = [];
+            detailsByWorker[d.worker].push(d);
+        });
+
+        // 요약 테이블 순서와 동일하게 렌더링
+        const sortedWorkers = Object.keys(detailsByWorker).sort((a, b) => a.localeCompare(b));
+        
+        sortedWorkers.forEach(worker => {
+            const wName = worker.split(' (')[0];
+            const card = document.createElement('div');
+            card.className = 'worker-detail-card';
+            
+            let tbodyHTML = '';
+            detailsByWorker[worker].forEach(d => {
+                // 연도(2026-)를 빼서 날짜 칸을 간결하게 (MM-DD)
+                const shortDate = d.date.slice(5).replace('-', '/');
+                tbodyHTML += `
+                    <tr>
+                        <td>${shortDate}</td>
+                        <td class="col-gap" style="color:#2980b9;">${formatTime(d.gapSec)}</td>
+                        <td class="col-ghost" style="color:#d35400;">${formatTime(d.ghostSec)}</td>
+                        <td><strong>${formatTime(d.totalSec)}</strong></td>
+                    </tr>
+                `;
+            });
+
+            card.innerHTML = `
+                <h4>👨‍💻 ${wName}</h4>
+                <div class="worker-table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>일자</th>
+                                <th class="col-gap">대기(Gap)</th>
+                                <th class="col-ghost">방치(Ghost)</th>
+                                <th>총 이석</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tbodyHTML}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            detailContainer.appendChild(card);
+        });
+    }
+    
+    criteriaBox.style.display = 'block';
+    resultSection.style.display = 'block';
+}
+
+function formatTime(sec) {
+    sec = Math.round(sec);
+    if (sec === 0) return "0분";
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    if (h > 0 && m > 0) return `${h}시간 ${m}분`;
+    if (h > 0) return `${h}시간`;
+    return `${m}분`;
+}
+</script>
+
+</body>
+</html>
