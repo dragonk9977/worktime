@@ -101,7 +101,7 @@
         <div id="exceptionList">
             <!-- 추가되는 예외 항목들이 여기에 들어갑니다 -->
         </div>
-        <p style="font-size: 0.85em; color: #7f8c8d; margin: 10px 0 0 0;">* 이름의 일부만 입력해도 됩니다 (예: '이종훈' 입력 시 LdapID가 포함된 작업자 자동 매칭). 사유는 참고용입니다.</p>
+        <p style="font-size: 0.85em; color: #7f8c8d; margin: 10px 0 0 0;">* 이름의 일부만 입력해도 됩니다 (예: '홍길동' 입력 시 LdapID가 포함된 작업자 자동 매칭). 사유는 참고용입니다.</p>
     </div>
 
     <div class="criteria-box" id="criteriaBox">
@@ -151,7 +151,7 @@ document.getElementById('addExceptionBtn').addEventListener('click', () => {
     const div = document.createElement('div');
     div.className = 'exception-row';
     div.innerHTML = `
-        <input type="text" placeholder="이름 (예: 이종훈)" class="exc-name">
+        <input type="text" placeholder="이름 (예: 홍길동)" class="exc-name">
         <input type="date" class="exc-date">
         <input type="number" placeholder="차감할 시간(분)" class="exc-min" min="0">
         <input type="text" placeholder="사유 (예: 주간회의)" class="exc-reason reason">
@@ -382,7 +382,6 @@ function analyze(dataMap) {
                 let originalTotal = dailyTotalSec;
                 dailyTotalSec = Math.max(0, dailyTotalSec - adjustSec);
                 
-                // 차감된 비율만큼 Gap과 Ghost 시간을 비례 배분하여 축소
                 let ratio = dailyTotalSec / originalTotal;
                 dailyGapSec *= ratio;
                 dailyGhostSec *= ratio;
@@ -475,7 +474,6 @@ function renderResults(data) {
             let tbodyHTML = '';
             detailsByWorker[worker].forEach(d => {
                 const shortDate = d.date.slice(5).replace('-', '/');
-                // 조정 사유가 있으면 강조
                 const highlightStyle = d.adjustmentNote ? "background-color: #fffae6;" : "";
                 const noteHTML = d.adjustmentNote ? `<div style="font-size:0.75em; color:#d35400; margin-top:2px;">${d.adjustmentNote}</div>` : "";
                 
